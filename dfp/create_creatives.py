@@ -5,32 +5,50 @@ import pprint
 
 from googleads import dfp
 
+import dfp.get_creatives
 from dfp.client import get_client
 
 
 logger = logging.getLogger(__name__)
 
-def create_creatives(creatives):
+def find(f, seq):
+  for item in seq:
+    if f(item):
+      return item
+
+def create_creatives(creative_configs):
   """
-  Creates creatives in DFP.
+  Creates creatives in DFP if it doesn't exist.
 
   Args:
-    creatives (arr): an array of objects, each a creative configuration
+    creative_configs (arr): an array of objects, each a creative configuration
   Returns:
     an array: an array of created creative IDs
   """
+  advertiser_id = creative_configs[0]['advertiserId']
   dfp_client = get_client()
   creative_service = dfp_client.GetService('CreativeService',
     version='v201702')
-  creatives = creative_service.createCreatives(creatives)
 
-  # Return IDs of created line items.
-  created_creative_ids = []
+  # All existing creatives
+  existing_creatives = dfp.get_creatives.get_creatives_by_advertiser_id(advertiser_id)
+  existing_creative_names = map(lambda c: c['name'], existing_creatives)
+
+  # Return IDs of existing/created creatives
+  creative_ids = []
+  for creative_config in creative_configs:
+    if creative_config['name'] in existing_creative_names:
+      creative_ids.append(find(lambda c: c.name == creative_config['name'], existing_creatives)['id'])
+      creative_configs.remove(creative_config)
+
+  # Submit request to create the outstanding configs that don't already exist
+  creatives = creative_service.createCreatives(creative_configs)
+
   for creative in creatives:
-    created_creative_ids.append(creative['id'])
+    creative_ids.append(creative['id'])
     logger.info(u'Created creative with ID "{0}" and name "{1}".'.format(
       creative['id'], creative['name']))
-  return created_creative_ids
+  return creative_ids
 
 def create_creative_config(name, advertiser_id):
   """
