@@ -24,7 +24,7 @@ def get_creatives_by_advertiser_id_and_name(advertiser_id, creative_name):
   """
 
   dfp_client = get_client()
-  creative_service = dfp_client.GetService('CreativeService', version='v201702')
+  creative_service = dfp_client.GetService('CreativeService', version='v201802')
 
   # Filter by name.
   query = 'WHERE name = :name AND advertiserId = :advertiser_id'
@@ -69,7 +69,7 @@ def get_creatives_by_advertiser_id(advertiser_id, print_creatives=False):
   dfp_client = get_client()
 
   # Initialize appropriate service.
-  creative_service = dfp_client.GetService('CreativeService', version='v201702')
+  creative_service = dfp_client.GetService('CreativeService', version='v201802')
 
   query = 'WHERE advertiserId = :advertiser_id'
   values = [{
